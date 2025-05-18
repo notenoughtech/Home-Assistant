@@ -1,0 +1,52 @@
+alias: "Update Weekly Energy Record"
+trigger:
+  - platform: time
+    at: "23:59:00"  # Or any time after your energy resets
+condition: []
+action:
+  - variables:
+      weekday: "{{ now().weekday() }}"  # 0 = Monday, 6 = Sunday
+  - choose:
+      - conditions: "{{ weekday == 0 }}"
+        sequence:
+          - service: input_number.set_value
+            data:
+              entity_id: input_number.grid_energy_monday
+              value: "{{ states('sensor.energy_grid_meter') | float }}"
+      - conditions: "{{ weekday == 1 }}"
+        sequence:
+          - service: input_number.set_value
+            data:
+              entity_id: input_number.grid_energy_tuesday
+              value: "{{ states('sensor.energy_grid_meter') | float }}"
+      - conditions: "{{ weekday == 2 }}"
+        sequence:
+          - service: input_number.set_value
+            data:
+              entity_id: input_number.grid_energy_wednesday
+              value: "{{ states('sensor.energy_grid_meter') | float }}"
+      - conditions: "{{ weekday == 3 }}"
+        sequence:
+          - service: input_number.set_value
+            data:
+              entity_id: input_number.grid_energy_thursday
+              value: "{{ states('sensor.energy_grid_meter') | float }}"
+      - conditions: "{{ weekday == 4 }}"
+        sequence:
+          - service: input_number.set_value
+            data:
+              entity_id: input_number.grid_energy_friday
+              value: "{{ states('sensor.energy_grid_meter') | float }}"
+      - conditions: "{{ weekday == 5 }}"
+        sequence:
+          - service: input_number.set_value
+            data:
+              entity_id: input_number.grid_energy_saturday
+              value: "{{ states('sensor.energy_grid_meter') | float }}"
+      - conditions: "{{ weekday == 6 }}"
+        sequence:
+          - service: input_number.set_value
+            data:
+              entity_id: input_number.grid_energy_sunday
+              value: "{{ states('sensor.energy_grid_meter') | float }}"
+mode: single
