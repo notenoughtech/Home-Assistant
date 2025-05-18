@@ -307,7 +307,7 @@ display:
 
       //Weather Widget 
       it.filled_rectangle(640, 180, 180, 33);      
-      it.printf(643 170, id(weather_font), COLOR_OFF,  "%s", weather_label.c_str());
+      it.printf(643, 170, id(weather_font), COLOR_OFF,  "%s", weather_label.c_str());
       it.printf(640, 205, id(pressure_font), "%.1f hPa", id(myPressure).state);
 
       //Consumption bars
