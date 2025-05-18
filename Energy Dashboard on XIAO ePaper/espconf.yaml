@@ -1,0 +1,408 @@
+esphome:
+  name: xiao-esp32-eink
+  friendly_name: Xiao ESP32 eink
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "t/mP522L="
+
+ota:
+  - platform: esphome
+    password: "ab8df8bdbd"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Xiao-Esp32-Eink Fallback Hotspot"
+    password: "udyNI4iPM88a"
+
+captive_portal:
+
+# Define font to show info
+font:
+  - file: "gfonts://Inter@700"
+    id: myFont
+    size: 24
+  - file: "gfonts://Inter@700"
+    id: label_small
+    size: 10
+  - file: "gfonts://Inter@700"
+    id: power_label
+    size: 10
+  - file: "gfonts://Inter@700"
+    id: temp_label
+    size: 35
+  - file: "gfonts://Inter@700"
+    id: weather_font
+    size: 24
+  - file: "gfonts://Inter@700"
+    id: day_font
+    size: 60
+  - file: "gfonts://Inter@700"
+    id: date_font
+    size: 30
+  - file: "gfonts://Inter@700"
+    id: pressure_font
+    size: 24
+  - file: "gfonts://Inter@700"
+    id: temp_font
+    size: 55
+  - file: "NotoEmoji-VariableFont_wght.ttf"
+    id: weather_icons
+    size: 130
+    glyphs: [
+      '☀','☁','⛅','☔','⚡','❄','❗',
+      '🌙','🌫','🌬','🌨','🌧','⛈','💨'
+    ]   
+  - file: "Roboto-Regular.ttf"
+    id: clock_large
+    size: 60
+
+# Get info from HA, as string format
+text_sensor:
+  - platform: homeassistant
+    entity_id: weather.forecast_home
+    id: myWeather
+    internal: true
+  - platform: homeassistant
+    entity_id: weather.forecast_home
+    id: myTemperature
+    attribute: "temperature"
+    internal: true
+  - platform: homeassistant
+    name: "HA Current Date"
+    entity_id: sensor.current_date
+    id: ha_date
+  - platform: homeassistant
+    name: "HA Day of Week"
+    entity_id: sensor.current_day_of_week
+    id: ha_day
+
+time:
+  - platform: homeassistant
+    id: ha_time
+  
+  
+
+# Get info from HA, as float format
+sensor:
+  - platform: homeassistant
+    entity_id: weather.forecast_home
+    id: myPressure
+    attribute: "pressure"
+    internal: true
+  - platform: homeassistant
+    entity_id: sensor.grid_power
+    id: myGridConsumption
+    internal: true
+  - platform: homeassistant
+    entity_id: sensor.energy_current_hour
+    id: mySolarPrediction
+    filters:
+      - lambda: return x * 1000;
+    internal: true
+  - platform: homeassistant
+    entity_id: sensor.solar_power
+    id: mySolarProduction
+    internal: true
+  - platform: homeassistant
+    entity_id: sensor.solar_power
+    id: mySolarProductionSoFar
+    internal: true
+  - platform: homeassistant
+    entity_id: sensor.solar_power
+    id: myGridUsageSoFar
+    internal: true
+  - platform: homeassistant
+    entity_id: sensor.solar_energy
+    id: mySolarTotalDay
+    internal: true
+  - platform: homeassistant
+    entity_id: sensor.grid_energy
+    id: myGridTotalDay
+    internal: true
+
+  - platform: homeassistant
+    name: "Energy Monday"
+    entity_id: input_number.grid_energy_monday
+    id: energy_monday
+  - platform: homeassistant
+    name: "Energy Tuesday"
+    entity_id: input_number.grid_energy_tuesday
+    id: energy_tuesday
+  - platform: homeassistant
+    name: "Energy Wednesday"
+    entity_id: input_number.grid_energy_wednesday
+    id: energy_wednesday
+  - platform: homeassistant
+    name: "Energy Thursday"
+    entity_id: input_number.grid_energy_thursday
+    id: energy_thursday
+  - platform: homeassistant
+    name: "Energy Friday"
+    entity_id: input_number.grid_energy_friday
+    id: energy_friday
+  - platform: homeassistant
+    name: "Energy Saturday"
+    entity_id: input_number.grid_energy_saturday
+    id: energy_saturday
+  - platform: homeassistant
+    name: "Energy Sunday"
+    entity_id: input_number.grid_energy_sunday
+    id: energy_sunday
+  - platform: homeassistant
+    name: "Energy Standing Charge"
+    entity_id: input_number.energy_standing_charge
+    id: energy_standing_charge
+  - platform: homeassistant
+    name: "Energy Price"
+    entity_id: input_number.energy_price
+    id: energy_price
+
+
+
+
+graph:
+    - id: energy_graph
+      duration: 12h
+      width: 710
+      height: 155
+      border: True
+      x_grid: 1h
+      y_grid: 250
+      
+      
+      max_value: 3300
+      min_value: -4000
+      traces:
+        - sensor: mySolarProduction
+          line_thickness: 2
+          line_type: SOLID
+          continuous: true
+        - sensor: mySolarPrediction
+          line_thickness: 1
+          line_type: DASHED
+          continuous: true
+        - sensor: myGridConsumption
+          line_thickness: 3
+          line_type: SOLID
+          continuous: true
+
+       
+
+  
+
+# Display info via SPI
+spi:
+  clk_pin: GPIO8
+  mosi_pin: GPIO10
+
+display:
+  - platform: waveshare_epaper
+    cs_pin: GPIO3
+    dc_pin: GPIO5
+    busy_pin: GPIO4
+    reset_pin: GPIO2
+    model: 7.50inv2
+    update_interval: 60s
+    lambda: |-
+      
+      // Main shapes
+
+      //Date 
+      it.printf(20, 52,  id(day_font),  "%s", id(ha_day).state.c_str());
+      it.printf(40, 120, id(date_font), "%s", id(ha_date).state.c_str());  
+
+      //Clock Pill
+      int screen_width = it.get_width();
+      it.filled_rectangle((screen_width - 170)/2, 0, 170, 70);
+      auto now = id(ha_time).now();
+      it.printf(323, 0, id(clock_large), COLOR_OFF, "%02d:%02d", now.hour, now.minute);
+
+      
+
+      //temperature 
+      it.printf(600, 120, id(temp_label), "°C");
+      it.printf(610, 135, id(temp_font), TextAlign::TOP_RIGHT, "%s", id(myTemperature).state.c_str());
+      
+      
+
+      std::string icon = " ";
+      std::string weather_label = "Unknown";
+      auto condition = id(myWeather).state;
+
+      if (condition == "sunny") {
+        icon = "\u2600";                  // ☀️
+        weather_label = "Sunny";
+      }
+      else if (condition == "clear-night") {
+        icon = "\U0001F319";              // 🌙
+        weather_label = "Clear Night";
+      }
+      else if (condition == "cloudy") {
+        icon = "\u2601";                  // ☁️
+        weather_label = "Cloudy";
+      }
+      else if (condition == "partlycloudy") {
+        icon = "\u26C5";                  // ⛅
+        weather_label = "Partly Cloudy";
+      }
+      else if (condition == "fog") {
+        icon = "\U0001F32B";              // 🌫️
+        weather_label = "Foggy";
+      }
+      else if (condition == "windy") {
+        icon = "\U0001F32C";              // 🌬️
+        weather_label = "Windy";
+      }
+      else if (condition == "windy-variant") {
+        icon = "\U0001F4A8";              // 💨
+        weather_label = "Breezy";
+      }
+      else if (condition == "hail") {
+        icon = "\U0001F328";              // 🌨️
+        weather_label = "Hail";
+      }
+      else if (condition == "lightning") {
+        icon = "\u26A1";                  // ⚡
+        weather_label = "Lightning";
+      }
+      else if (condition == "lightning-rainy") {
+        icon = "\u26C8";                  // ⛈️
+        weather_label = "Thunderstorm";
+      }
+      else if (condition == "pouring") {
+        icon = "\U0001F327";              // 🌧️
+        weather_label = "Heavy Rain";
+      }
+      else if (condition == "rainy") {
+        icon = "\u2614";                  // ☔
+        weather_label = "Rainy";
+      }
+      else if (condition == "snowy") {
+        icon = "\u2744";                  // ❄️
+        weather_label = "Snowy";
+      }
+      else if (condition == "snowy-rainy") {
+        icon = "\U0001F328";              // 🌨️
+        weather_label = "Snow/Rain";
+      }
+      else if (condition == "exceptional") {
+        icon = "\u2757";                  // ❗
+        weather_label = "Extreme";
+      }
+      it.printf(790, 10, id(weather_icons), TextAlign::TOP_RIGHT, "%s", icon.c_str());
+
+      //Weather Widget 
+      it.filled_rectangle(640, 180, 180, 33);      
+      it.printf(643 170, id(weather_font), COLOR_OFF,  "%s", weather_label.c_str());
+      it.printf(640, 205, id(pressure_font), "%.1f hPa", id(myPressure).state);
+
+      //Consumption bars
+      int level = 280;
+      int label_level = 290;
+      int bar_width = 30;
+      int bar_verti_start = (screen_width - (bar_width + 5) * 7 -5) /2;
+      int bar_height = 120;
+      int max_grid_use = 6000;
+      float energy_standing_c = id(energy_standing_charge).state;
+      float energy_tariff = id(energy_price).state;
+
+      int Mon = (id(energy_monday).state    * bar_height)/max_grid_use;
+      int Tue = (id(energy_tuesday).state   * bar_height)/max_grid_use;
+      int Wed = (id(energy_wednesday).state * bar_height)/max_grid_use;
+      int Thu = (id(energy_thursday).state  * bar_height)/max_grid_use;
+      int Fri = (id(energy_friday).state    * bar_height)/max_grid_use;
+      int Sat = (id(energy_saturday).state  * bar_height)/max_grid_use;
+      int Sun = (id(energy_sunday).state    * bar_height)/max_grid_use;;
+
+      it.filled_rectangle(bar_verti_start, level - Mon, bar_width, Mon);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 1, level - Tue, bar_width, Tue);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 2, level - Wed, bar_width, Wed);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 3, level - Thu, bar_width, Thu);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 4, level - Fri, bar_width, Fri);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 5, level - Sat, bar_width, Sat);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 6, level - Sun, bar_width, Sun);
+
+      //daily cost displayed over bars
+      it.printf(bar_verti_start, level - Mon - 15, id(power_label),                       "£%.2f", id(energy_monday).state    /1000 * energy_tariff + energy_standing_c);
+      it.printf(bar_verti_start + (bar_width + 5) * 1, level - Tue - 15, id(power_label), "£%.2f", id(energy_tuesday).state   /1000 * energy_tariff + energy_standing_c);
+      it.printf(bar_verti_start + (bar_width + 5) * 2, level - Wed - 15, id(power_label), "£%.2f", id(energy_wednesday).state /1000 * energy_tariff + energy_standing_c);
+      it.printf(bar_verti_start + (bar_width + 5) * 3, level - Thu - 15, id(power_label), "£%.2f", id(energy_thursday).state  /1000 * energy_tariff + energy_standing_c);
+      it.printf(bar_verti_start + (bar_width + 5) * 4, level - Fri - 15, id(power_label), "£%.2f", id(energy_friday).state    /1000 * energy_tariff + energy_standing_c);
+      it.printf(bar_verti_start + (bar_width + 5) * 5, level - Sat - 15, id(power_label), "£%.2f", id(energy_saturday).state  /1000 * energy_tariff + energy_standing_c);
+      it.printf(bar_verti_start + (bar_width + 5) * 6, level - Sun - 15, id(power_label), "£%.2f", id(energy_sunday).state    /1000 * energy_tariff + energy_standing_c);
+
+      //labels
+      it.filled_rectangle(bar_verti_start, label_level, bar_width, 12);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 1, label_level, bar_width, 12);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 2, label_level, bar_width, 12);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 3, label_level, bar_width, 12);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 4, label_level, bar_width, 12);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 5, label_level, bar_width, 12);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 6, label_level, bar_width, 12);
+
+      it.printf(bar_verti_start + bar_width/2-3, label_level, id(label_small), COLOR_OFF, "M");
+      it.printf(bar_verti_start + (bar_width + 5) * 1 + bar_width/2-3, label_level, id(label_small), COLOR_OFF, "T");
+      it.printf(bar_verti_start + (bar_width + 5) * 2 + bar_width/2-3, label_level, id(label_small), COLOR_OFF, "W");
+      it.printf(bar_verti_start + (bar_width + 5) * 3 + bar_width/2-3, label_level, id(label_small), COLOR_OFF, "T");
+      it.printf(bar_verti_start + (bar_width + 5) * 4 + bar_width/2-3, label_level, id(label_small), COLOR_OFF, "F");
+      it.printf(bar_verti_start + (bar_width + 5) * 5 + bar_width/2-3, label_level, id(label_small), COLOR_OFF, "S");
+      it.printf(bar_verti_start + (bar_width + 5) * 6 + bar_width/2-3, label_level, id(label_small), COLOR_OFF, "S");
+
+      
+      
+      //graph variables
+      int graph_vert = 60;
+      int graph_hori = 310;
+      int graph_hori_offset = 20;
+
+      //draw the graph
+      it.graph(graph_vert, graph_hori, id(energy_graph)); 
+      it.filled_rectangle(graph_vert, graph_hori, 80, 15);
+      it.printf(graph_vert + 7, graph_hori, id(label_small), COLOR_OFF, "Last 12h");
+
+      //Current Grid xconsumption
+      float grid = id(myGridConsumption).state;
+      if (grid >= 0) {
+        it.printf(graph_vert - 20, graph_hori - 40, id(myFont), "EXPORT: %.1fW", grid);
+      } else {
+        it.printf(graph_vert - 20, graph_hori - 40, id(myFont), "IMPORT: %.1fW", -grid);
+      }
+      it.printf(graph_vert +700,   graph_hori - 40, id(myFont), TextAlign::TOP_RIGHT, "SOLAR: %.1fW", id(mySolarProduction).state);
+
+      // dark label background
+      it.filled_rectangle(graph_vert-40, graph_hori, 40, 15);      
+      it.filled_rectangle(graph_vert-40, graph_hori + (graph_hori_offset * 1), 40, 15);
+      it.filled_rectangle(graph_vert-40, graph_hori + (graph_hori_offset * 2), 40, 15);
+      it.filled_rectangle(graph_vert-40, graph_hori + (graph_hori_offset * 3), 40, 15);
+      it.filled_rectangle(graph_vert-40, graph_hori + (graph_hori_offset * 4), 40, 15);
+      it.filled_rectangle(graph_vert-40, graph_hori + (graph_hori_offset * 5), 40, 15);
+      it.filled_rectangle(graph_vert-40, graph_hori + (graph_hori_offset * 6), 40, 15);
+      it.filled_rectangle(graph_vert-40, graph_hori + (graph_hori_offset * 7), 40, 15);
+     
+
+      // power usage labels aligned to the left of the graph
+      it.printf(graph_vert, graph_hori, id(label_small), COLOR_OFF, TextAlign::TOP_RIGHT, "3000");
+      it.printf(graph_vert, graph_hori + (graph_hori_offset * 1), id(label_small), COLOR_OFF, TextAlign::TOP_RIGHT, "2000");
+      it.printf(graph_vert, graph_hori + (graph_hori_offset * 2), id(label_small), COLOR_OFF, TextAlign::TOP_RIGHT, "1000");
+      it.printf(graph_vert, graph_hori + (graph_hori_offset * 3), id(label_small), COLOR_OFF, TextAlign::TOP_RIGHT, "0");
+      it.printf(graph_vert, graph_hori + (graph_hori_offset * 4), id(label_small), COLOR_OFF, TextAlign::TOP_RIGHT, "1000");
+      it.printf(graph_vert, graph_hori + (graph_hori_offset * 5), id(label_small), COLOR_OFF, TextAlign::TOP_RIGHT, "2000");
+      it.printf(graph_vert, graph_hori + (graph_hori_offset * 6), id(label_small), COLOR_OFF, TextAlign::TOP_RIGHT, "3000");
+      it.printf(graph_vert, graph_hori + (graph_hori_offset * 7), id(label_small), COLOR_OFF, TextAlign::TOP_RIGHT, "4000");
+
+
+      
