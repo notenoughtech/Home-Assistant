@@ -1,0 +1,11 @@
+template:
+  - sensor:
+     name: "Current Date"
+     unique_id: current_date
+     state: "{{ now().strftime('%Y-%m-%d') }}"
+     icon: mdi:calendar
+  - sensor:
+     name: "Current Day of Week"
+     unique_id: current_day_of_week
+     state: "{{ now().strftime('%A') }}"
+     icon: mdi:calendar-week
