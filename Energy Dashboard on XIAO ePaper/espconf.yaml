@@ -238,9 +238,10 @@ display:
       
 
       //temperature 
-      int temp_int = atoi(id(myTemperature).state.c_str());
+      std::string temp_string = id(myTemperature).state;
+      float temp_f = atoi(temp_string.c_str());
       it.printf(600, 120, id(temp_label), "°C");
-      it.printf(610, 135, id(temp_font), TextAlign::TOP_RIGHT, "%.0f", temp_int);
+      it.printf(610, 135, id(temp_font), TextAlign::TOP_RIGHT, "%.0f", temp_f);
       
       
 
