@@ -13,11 +13,11 @@ logger:
 # Enable Home Assistant API
 api:
   encryption:
-    key: "t/mP522L="
+    key: "t/mP522L2FGfSZHVGy0mmyUmAKLpubt2tq7AmTobHaM="
 
 ota:
   - platform: esphome
-    password: "ab8df8bdbd"
+    password: "ab8df8bdbdeb24d49fba34e66cd07782"
 
 wifi:
   ssid: !secret wifi_ssid
@@ -134,34 +134,38 @@ sensor:
     id: myGridTotalDay
     internal: true
 
+
+    
   - platform: homeassistant
-    name: "Energy Monday"
+    #name: "Energy Monday"
     entity_id: input_number.grid_energy_monday
     id: energy_monday
   - platform: homeassistant
-    name: "Energy Tuesday"
+    #name: "Energy Tuesday"
     entity_id: input_number.grid_energy_tuesday
     id: energy_tuesday
   - platform: homeassistant
-    name: "Energy Wednesday"
+    #name: "Energy Wednesday"
     entity_id: input_number.grid_energy_wednesday
     id: energy_wednesday
   - platform: homeassistant
-    name: "Energy Thursday"
+    #name: "Energy Thursday"
     entity_id: input_number.grid_energy_thursday
     id: energy_thursday
   - platform: homeassistant
-    name: "Energy Friday"
+    #name: "Energy Friday"
     entity_id: input_number.grid_energy_friday
     id: energy_friday
   - platform: homeassistant
-    name: "Energy Saturday"
+    #name: "Energy Saturday"
     entity_id: input_number.grid_energy_saturday
     id: energy_saturday
   - platform: homeassistant
-    name: "Energy Sunday"
+    #name: "Energy Sunday"
     entity_id: input_number.grid_energy_sunday
     id: energy_sunday
+
+    #Cost and standing charge
   - platform: homeassistant
     name: "Energy Standing Charge"
     entity_id: input_number.energy_standing_charge
@@ -234,8 +238,9 @@ display:
       
 
       //temperature 
+      int temp_int = atoi(id(myTemperature).state.c_str());
       it.printf(600, 120, id(temp_label), "°C");
-      it.printf(610, 135, id(temp_font), TextAlign::TOP_RIGHT, "%s", id(myTemperature).state.c_str());
+      it.printf(610, 135, id(temp_font), TextAlign::TOP_RIGHT, "%.0f", temp_int);
       
       
 
@@ -306,9 +311,9 @@ display:
       it.printf(790, 10, id(weather_icons), TextAlign::TOP_RIGHT, "%s", icon.c_str());
 
       //Weather Widget 
-      it.filled_rectangle(640, 180, 180, 33);      
-      it.printf(643, 170, id(weather_font), COLOR_OFF,  "%s", weather_label.c_str());
-      it.printf(640, 205, id(pressure_font), "%.1f hPa", id(myPressure).state);
+      it.filled_rectangle(635, 180, 180, 33);      
+      it.printf(638, 182, id(weather_font), COLOR_OFF,  "%s", weather_label.c_str());
+      it.printf(635, 215, id(pressure_font), "%.1f hPa", id(myPressure).state);
 
       //Consumption bars
       int level = 280;
@@ -320,33 +325,42 @@ display:
       float energy_standing_c = id(energy_standing_charge).state;
       float energy_tariff = id(energy_price).state;
 
-      int Mon = (id(energy_monday).state    * bar_height)/max_grid_use;
-      int Tue = (id(energy_tuesday).state   * bar_height)/max_grid_use;
-      int Wed = (id(energy_wednesday).state * bar_height)/max_grid_use;
-      int Thu = (id(energy_thursday).state  * bar_height)/max_grid_use;
-      int Fri = (id(energy_friday).state    * bar_height)/max_grid_use;
-      int Sat = (id(energy_saturday).state  * bar_height)/max_grid_use;
-      int Sun = (id(energy_sunday).state    * bar_height)/max_grid_use;;
+      //Supplied in kWh 
+      int Mon = id(energy_monday).state;    
+      int Tue = id(energy_tuesday).state;
+      int Wed = id(energy_wednesday).state;
+      int Thu = id(energy_thursday).state; 
+      int Fri = id(energy_friday).state; 
+      int Sat = id(energy_saturday).state;
+      int Sun = id(energy_sunday).state;  
 
-      it.filled_rectangle(bar_verti_start, level - Mon, bar_width, Mon);
-      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 1, level - Tue, bar_width, Tue);
-      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 2, level - Wed, bar_width, Wed);
-      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 3, level - Thu, bar_width, Thu);
-      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 4, level - Fri, bar_width, Fri);
-      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 5, level - Sat, bar_width, Sat);
-      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 6, level - Sun, bar_width, Sun);
+      int Mon_bar = (Mon * 1000 * bar_height)/max_grid_use;
+      int Tue_bar = (Tue * 1000 * bar_height)/max_grid_use;
+      int Wed_bar = (Wed * 1000 * bar_height)/max_grid_use;
+      int Thu_bar = (Thu * 1000 * bar_height)/max_grid_use;
+      int Fri_bar = (Fri * 1000 * bar_height)/max_grid_use;
+      int Sat_bar = (Sat * 1000 * bar_height)/max_grid_use;
+      int Sun_bar = (Sun * 1000 * bar_height)/max_grid_use;
+
+      it.filled_rectangle(bar_verti_start,                       level - Mon_bar, bar_width, Mon_bar);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 1, level - Tue_bar, bar_width, Tue_bar);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 2, level - Wed_bar, bar_width, Wed_bar);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 3, level - Thu_bar, bar_width, Thu_bar);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 4, level - Fri_bar, bar_width, Fri_bar);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 5, level - Sat_bar, bar_width, Sat_bar);
+      it.filled_rectangle(bar_verti_start + (bar_width + 5) * 6, level - Sun_bar, bar_width, Sun_bar);
 
       //daily cost displayed over bars
-      it.printf(bar_verti_start, level - Mon - 15, id(power_label),                       "£%.2f", id(energy_monday).state    /1000 * energy_tariff + energy_standing_c);
-      it.printf(bar_verti_start + (bar_width + 5) * 1, level - Tue - 15, id(power_label), "£%.2f", id(energy_tuesday).state   /1000 * energy_tariff + energy_standing_c);
-      it.printf(bar_verti_start + (bar_width + 5) * 2, level - Wed - 15, id(power_label), "£%.2f", id(energy_wednesday).state /1000 * energy_tariff + energy_standing_c);
-      it.printf(bar_verti_start + (bar_width + 5) * 3, level - Thu - 15, id(power_label), "£%.2f", id(energy_thursday).state  /1000 * energy_tariff + energy_standing_c);
-      it.printf(bar_verti_start + (bar_width + 5) * 4, level - Fri - 15, id(power_label), "£%.2f", id(energy_friday).state    /1000 * energy_tariff + energy_standing_c);
-      it.printf(bar_verti_start + (bar_width + 5) * 5, level - Sat - 15, id(power_label), "£%.2f", id(energy_saturday).state  /1000 * energy_tariff + energy_standing_c);
-      it.printf(bar_verti_start + (bar_width + 5) * 6, level - Sun - 15, id(power_label), "£%.2f", id(energy_sunday).state    /1000 * energy_tariff + energy_standing_c);
+      it.printf(bar_verti_start,                       level - Mon_bar - 15, id(power_label), "£%.2f", Mon * energy_tariff + energy_standing_c);
+      it.printf(bar_verti_start + (bar_width + 5) * 1, level - Tue_bar - 15, id(power_label), "£%.2f", Tue * energy_tariff + energy_standing_c);
+      it.printf(bar_verti_start + (bar_width + 5) * 2, level - Wed_bar - 15, id(power_label), "£%.2f", Wed * energy_tariff + energy_standing_c);
+      it.printf(bar_verti_start + (bar_width + 5) * 3, level - Thu_bar - 15, id(power_label), "£%.2f", Thu * energy_tariff + energy_standing_c);
+      it.printf(bar_verti_start + (bar_width + 5) * 4, level - Fri_bar - 15, id(power_label), "£%.2f", Fri * energy_tariff + energy_standing_c);
+      it.printf(bar_verti_start + (bar_width + 5) * 5, level - Sat_bar - 15, id(power_label), "£%.2f", Sat * energy_tariff + energy_standing_c);
+      it.printf(bar_verti_start + (bar_width + 5) * 6, level - Sun_bar - 15, id(power_label), "£%.2f", Sun * energy_tariff + energy_standing_c);
 
       //labels
-      it.filled_rectangle(bar_verti_start, label_level, bar_width, 12);
+      it.filled_rectangle(bar_verti_start,                       label_level, bar_width, 12);
       it.filled_rectangle(bar_verti_start + (bar_width + 5) * 1, label_level, bar_width, 12);
       it.filled_rectangle(bar_verti_start + (bar_width + 5) * 2, label_level, bar_width, 12);
       it.filled_rectangle(bar_verti_start + (bar_width + 5) * 3, label_level, bar_width, 12);
@@ -354,7 +368,7 @@ display:
       it.filled_rectangle(bar_verti_start + (bar_width + 5) * 5, label_level, bar_width, 12);
       it.filled_rectangle(bar_verti_start + (bar_width + 5) * 6, label_level, bar_width, 12);
 
-      it.printf(bar_verti_start + bar_width/2-3, label_level, id(label_small), COLOR_OFF, "M");
+      it.printf(bar_verti_start + bar_width/2-3,                       label_level, id(label_small), COLOR_OFF, "M");
       it.printf(bar_verti_start + (bar_width + 5) * 1 + bar_width/2-3, label_level, id(label_small), COLOR_OFF, "T");
       it.printf(bar_verti_start + (bar_width + 5) * 2 + bar_width/2-3, label_level, id(label_small), COLOR_OFF, "W");
       it.printf(bar_verti_start + (bar_width + 5) * 3 + bar_width/2-3, label_level, id(label_small), COLOR_OFF, "T");
